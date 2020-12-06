@@ -13,6 +13,11 @@ namespace AudioConverter.MVVM
     internal class MainWindowViewModel : ViewModelBase
     {
         /// <summary>
+        /// Engine path
+        /// </summary>
+        private const string EnginePath = "ffmpeg.exe";
+
+        /// <summary>
         /// Paths to input files
         /// </summary>
         private IEnumerable<string> _filePathInputFiles;
@@ -23,9 +28,29 @@ namespace AudioConverter.MVVM
         private string _fileNames;
 
         /// <summary>
+        /// Flag which means will be bit rate changed or not
+        /// </summary>
+        private bool _isChangeBitRate;
+
+        /// <summary>
+        /// Bit rate of audio that will be set on files
+        /// </summary>
+        private int? _audioBitRate;
+
+        /// <summary>
+        /// FFmpeg engine
+        /// </summary>
+        private readonly Engine _engine;
+
+        /// <summary>
         /// File path for output file
         /// </summary>
         private string _filePathforOutputFile;
+
+        /// <summary>
+        /// Options for file conversions
+        /// </summary>
+        private ConversionOptions _conversionOptions;
 
         /// <summary>
         /// Allowing the user to select one or more files.
@@ -62,6 +87,9 @@ namespace AudioConverter.MVVM
         /// </summary>
         public MainWindowViewModel()
         {
+            _conversionOptions = new ConversionOptions();
+            _engine = new Engine(EnginePath);
+
             _commonOpenFileDialog = new CommonOpenFileDialog();
             _commonOpenFileDialog.IsFolderPicker = true;
 
@@ -84,6 +112,40 @@ namespace AudioConverter.MVVM
             };
 
             SelectedFormatValue = AudioFormats.ElementAt(0);
+            AudioBitRate = null;
+        }
+
+        /// <summary>
+        /// Bit rate of audio that will be set on files
+        /// </summary>
+        public int? AudioBitRate
+        {
+            get => _audioBitRate;
+            set
+            {
+                _audioBitRate = value;
+                OnPropertyChanged(nameof(AudioBitRate));
+            }
+        }
+
+        /// <summary>
+        /// Flag which means will be bit rate changed or not
+        /// </summary>
+        public bool IsChangeBitRate
+        {
+            get => _isChangeBitRate;
+            set
+            {
+                _isChangeBitRate = value;
+
+                if (!_isChangeBitRate)
+                {
+                    AudioBitRate = null;
+                }
+
+                OnPropertyChanged(nameof(AudioBitRate));
+                OnPropertyChanged(nameof(IsChangeBitRate));
+            }
         }
 
         /// <summary>
@@ -137,7 +199,7 @@ namespace AudioConverter.MVVM
                 FilePathInputFiles = openFileDialog.FileNames;
             }
 
-            for (int i = 0; i < FilePathInputFiles.Count(); i++)
+            for (int i = 0; i < FilePathInputFiles?.Count(); i++)
             {
                 FileNames += Path.GetFileName(FilePathInputFiles.ElementAt(i)) + " | ";
             }
@@ -164,21 +226,23 @@ namespace AudioConverter.MVVM
             var inputMediaFiles = new List<MediaFile>();
             var outputMediaFiles = new List<MediaFile>();
 
+            if (IsChangeBitRate)
+            {
+                _conversionOptions.AudioBitRate = AudioBitRate;
+            }
+
             foreach (var item in FilePathInputFiles)
             {
                 inputMediaFiles.Add(new MediaFile($@"{item}"));
-                outputMediaFiles.Add(new MediaFile($@"{FilePathForOutputFile}\{Path.GetFileNameWithoutExtension(item)}.{SelectedFormatValue}"));
+                outputMediaFiles.Add(new MediaFile($@"{FilePathForOutputFile}\{Path.GetFileNameWithoutExtension(item)}_{AudioBitRate}.{SelectedFormatValue}"));
             }
-
-            var ffmpeg = new Engine("ffmpeg.exe");
 
             for (int i = 0; i < inputMediaFiles.Count; i++)
             {
-                await ffmpeg.ConvertAsync(inputMediaFiles[i], outputMediaFiles[i]);
+                await _engine.ConvertAsync(inputMediaFiles[i], outputMediaFiles[i], _conversionOptions);
             }
 
             MessageBox.Show("Done");
-
         }
     }
 }

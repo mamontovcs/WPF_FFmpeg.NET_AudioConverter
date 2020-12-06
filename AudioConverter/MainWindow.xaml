@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:local="clr-namespace:AudioConverter.MVVM"
         mc:Ignorable="d"
         Title="AudioConverter" Height="200" Width="800">
@@ -12,6 +13,9 @@
     </Window.DataContext>
 
     <Window.Resources>
+
+        <local:BooleansToBooleanConverter x:Key="boleansToBooleanConverter" />
+
         <Style x:Key="BaseControlStyle" TargetType="Control">
             <Setter Property="Margin" Value="3" />
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -37,6 +41,7 @@
         <Style TargetType="StackPanel" >
             <Setter Property="HorizontalAlignment" Value="Center"></Setter>
             <Setter Property="VerticalAlignment" Value="Center"></Setter>
+            <Setter Property="Orientation" Value="Horizontal"></Setter>
         </Style>
 
         <Style TargetType="Button" BasedOn="{StaticResource ButtonBaseStyle}" />
@@ -45,6 +50,12 @@
 
         <Style TargetType="ComboBox" BasedOn="{StaticResource BaseControlStyle}" >
             <Setter Property="HorizontalAlignment" Value="Left"></Setter>
+            <Setter Property="Width" Value="100"></Setter>
+        </Style>
+
+        <Style TargetType="CheckBox" BasedOn="{StaticResource BaseControlStyle}" >
+            <Setter Property="HorizontalAlignment" Value="Left"></Setter>
+            <Setter Property="Margin" Value="10"></Setter>
         </Style>
 
     </Window.Resources>
@@ -59,35 +70,64 @@
             <ColumnDefinition Width="40*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" >
+        <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right" >
 
             <Label Content="Input File "  />
-            <TextBox IsReadOnly="True" Text="{Binding Path=FileNames}"/>
+            <TextBox Name="OpenDialogForInputFileCommandTextBox" IsReadOnly="True" Text="{Binding Path=FileNames}"/>
             <Button Content="Browse" 
                     Command="{Binding OpenDialogForInputFileCommand}"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" >
+        <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" >
 
-            <Label Content="Output File Directory"  />
-            <TextBox IsReadOnly="True" Text="{Binding Path=FilePathForOutputFile}"/>
+            <Label Content="Output File Directory"/>
+            <TextBox Name="FilePathForOutputFileTextBox" IsReadOnly="True" Text="{Binding Path=FilePathForOutputFile}"/>
             <Button Content="Browse" 
                     Command="{Binding OpenDialogForOutputDirectory}"/>
         </StackPanel>
 
 
-        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+        <StackPanel Grid.Row="0" Grid.Column="1">
 
             <Label Content="Convert to"/>
             <ComboBox ItemsSource="{Binding AudioFormats}"
-                  SelectedValue="{Binding SelectedFormatValue}" Grid.Column="1"  Width="120" />
+                  SelectedValue="{Binding SelectedFormatValue}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center">
+            <Label Content="Change bit rate"/>
+            <CheckBox Name="IsChangeBitRateCheckBox" IsChecked="{Binding IsChangeBitRate}"></CheckBox>
+            <TextBox Width="70" Name = "BitRateTextBox"
+                             Grid.Column="1"
+                             IsEnabled="{Binding IsChangeBitRate, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" >
+                <TextBox.Text>
+                    <Binding Path = "AudioBitRate"
+                                     Mode="TwoWay" 
+                                     UpdateSourceTrigger="PropertyChanged">
+                        <Binding.ValidationRules>
+                            <local:BitRateValidator ValidationStep = "ConvertedProposedValue"
+                                                         ValidatesOnTargetUpdated="False"/>
+                        </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+            </TextBox>
 
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+        <StackPanel Grid.Row="2" Grid.Column="1">
 
             <Button Content="Convert" 
-                    Command="{Binding RunConversionCommand}" />
+                    Command="{Binding RunConversionCommand}">
+
+                <Button.IsEnabled>
+                    <MultiBinding Converter="{ StaticResource boleansToBooleanConverter}" Mode="TwoWay">
+                        <Binding ElementName="BitRateTextBox" Path="(Validation.HasError)" />
+                        <Binding ElementName="FilePathForOutputFileTextBox" Path="Text.IsEmpty" />
+                        <Binding ElementName="OpenDialogForInputFileCommandTextBox" Path="Text.IsEmpty" />
+                    </MultiBinding>
+                </Button.IsEnabled>
+
+            </Button>
 
         </StackPanel>
     </Grid>
