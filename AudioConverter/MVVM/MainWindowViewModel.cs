@@ -17,45 +17,65 @@ namespace AudioConverter.MVVM
         /// </summary>
         private const string EnginePath = "ffmpeg.exe";
 
-        /// <summary>
-        /// Paths to input files
-        /// </summary>
         private IEnumerable<string> _filePathInputFiles;
 
-        /// <summary>
-        /// Names of files
-        /// </summary>
-        private string _fileNames;
-
-        /// <summary>
-        /// Flag which means will be bit rate changed or not
-        /// </summary>
-        private bool _isChangeBitRate;
-
-        /// <summary>
-        /// Bit rate of audio that will be set on files
-        /// </summary>
-        private int? _audioBitRate;
-
-        /// <summary>
-        /// FFmpeg engine
-        /// </summary>
-        private readonly Engine _engine;
-
-        /// <summary>
-        /// File path for output file
-        /// </summary>
         private string _filePathforOutputFile;
 
-        /// <summary>
-        /// Options for file conversions
-        /// </summary>
+        private string _fileNames;
+
+        private bool _isChangeBitRate;
+
+        private bool _isCutAudio;
+
+        private int? cutTo;
+
+        private int? cutFrom;
+
+        private int? _audioBitRate;
+
+        private readonly Engine _engine;
+
         private ConversionOptions _conversionOptions;
 
-        /// <summary>
-        /// Allowing the user to select one or more files.
-        /// </summary>
         private CommonOpenFileDialog _commonOpenFileDialog;
+
+        /// <summary>
+        /// Creates instance of <see cref="MainWindowViewModel"/>
+        /// </summary>
+        public MainWindowViewModel()
+        {
+            // TODO: Add validation when textbox is empty
+            // TODO: Add audio cut
+            // TODO: Add audio acceleration
+            // TODO: Add audio deceleration
+
+            _conversionOptions = new ConversionOptions();
+            _engine = new Engine(EnginePath);
+
+            _commonOpenFileDialog = new CommonOpenFileDialog();
+            _commonOpenFileDialog.IsFolderPicker = true;
+
+            OpenDialogForInputFileCommand = new RelayCommand(OpenDialogForInputFile);
+            OpenDialogForOutputDirectory = new RelayCommand(OpenDialogForOutputFile);
+
+            RunConversionCommand = new AsyncCommand(
+                async () =>
+                {
+                    await RunConversionAsync();
+                });
+
+            AudioFormats = new List<string>()
+            {
+                "mp3",
+                "flac",
+                "wav",
+                "aac",
+                "ac3"
+            };
+
+            SelectedFormatValue = AudioFormats.ElementAt(0);
+            AudioBitRate = null;
+        }
 
         /// <summary>
         /// Audio formats for converting audio files
@@ -83,36 +103,51 @@ namespace AudioConverter.MVVM
         public ICommand RunConversionCommand { get; set; }
 
         /// <summary>
-        /// Creates instance of <see cref="MainWindowViewModel"/>
+        /// How long to cut the video
         /// </summary>
-        public MainWindowViewModel()
+        public int? CutTo
         {
-            _conversionOptions = new ConversionOptions();
-            _engine = new Engine(EnginePath);
-
-            _commonOpenFileDialog = new CommonOpenFileDialog();
-            _commonOpenFileDialog.IsFolderPicker = true;
-
-            OpenDialogForInputFileCommand = new RelayCommand(OpenDialogForInputFile);
-            OpenDialogForOutputDirectory = new RelayCommand(OpenDialogForOutputFile);
-
-            RunConversionCommand = new AsyncCommand(
-                async () =>
-                {
-                    await RunConversionAsync();
-                });
-
-            AudioFormats = new List<string>()
+            get => cutTo;
+            set
             {
-                "mp3",
-                "flac",
-                "wav",
-                "aac",
-                "ac3"
-            };
+                cutTo = value;
+                OnPropertyChanged(nameof(CutTo));
+            }
+        }
 
-            SelectedFormatValue = AudioFormats.ElementAt(0);
-            AudioBitRate = null;
+        /// <summary>
+        /// Start cut from value
+        /// </summary>
+        public int? CutFrom
+        {
+            get => cutFrom;
+            set
+            {
+                cutFrom = value;
+                OnPropertyChanged(nameof(CutFrom));
+            }
+        }
+
+        /// <summary>
+        /// Flag which means will be audio cut or not
+        /// </summary>
+        public bool IsCutAudio
+        {
+            get => _isCutAudio;
+            set
+            {
+                _isCutAudio = value;
+
+                if (!IsCutAudio)
+                {
+                    CutFrom = null;
+                    CutTo = null;
+                }
+
+                OnPropertyChanged(nameof(CutTo));
+                OnPropertyChanged(nameof(CutFrom));
+                OnPropertyChanged(nameof(IsCutAudio));
+            }
         }
 
         /// <summary>

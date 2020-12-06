@@ -88,7 +88,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MVVM\BitRateValidator.cs" />
+    <Compile Include="MVVM\NumericTextBoxValidatior.cs" />
     <Compile Include="MVVM\Commands\AsyncCommandBase.cs" />
     <Compile Include="MVVM\Commands\AsyncCommand.cs" />
     <Compile Include="MVVM\Commands\IAsyncCommand.cs" />

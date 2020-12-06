@@ -6,12 +6,12 @@ namespace AudioConverter.MVVM
     /// <summary>
     /// Class which validates values from bit rate textbox
     /// </summary>
-    internal class BitRateValidator : ValidationRule
+    internal class NumericTextBoxValidatior : ValidationRule
     {
         /// <summary>
-        /// Creates instance of <see cref="BitRateValidator"/>
+        /// Creates instance of <see cref="NumericTextBoxValidatior"/>
         /// </summary>
-        public BitRateValidator()
+        public NumericTextBoxValidatior()
         {
         }
 
@@ -23,11 +23,11 @@ namespace AudioConverter.MVVM
         /// <returns></returns>
         public override ValidationResult Validate(object value, CultureInfo cultureInfo)
         {
-            int bitRate = 0;
+            int digit = 0;
 
-            int.TryParse(value.ToString(), out bitRate);
+            int.TryParse(value.ToString(), out digit);
 
-            return bitRate > 0 ? ValidationResult.ValidResult : new ValidationResult(false, string.Empty);
+            return digit > 0 && value.ToString().Length > 0 ? ValidationResult.ValidResult : new ValidationResult(false, string.Empty);
         }
     }
 }
