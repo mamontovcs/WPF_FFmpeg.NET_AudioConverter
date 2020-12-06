@@ -1,6 +1,7 @@
 ﻿using FFmpeg.NET;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,9 +13,6 @@ namespace AudioConverter.MVVM
 {
     internal class MainWindowViewModel : ViewModelBase
     {
-        /// <summary>
-        /// Engine path
-        /// </summary>
         private const string EnginePath = "ffmpeg.exe";
 
         private IEnumerable<string> _filePathInputFiles;
@@ -44,11 +42,6 @@ namespace AudioConverter.MVVM
         /// </summary>
         public MainWindowViewModel()
         {
-            // TODO: Add validation when textbox is empty
-            // TODO: Add audio cut
-            // TODO: Add audio acceleration
-            // TODO: Add audio deceleration
-
             _conversionOptions = new ConversionOptions();
             _engine = new Engine(EnginePath);
 
@@ -261,9 +254,15 @@ namespace AudioConverter.MVVM
             var inputMediaFiles = new List<MediaFile>();
             var outputMediaFiles = new List<MediaFile>();
 
-            if (IsChangeBitRate)
+            if (IsChangeBitRate && AudioBitRate != null)
             {
                 _conversionOptions.AudioBitRate = AudioBitRate;
+            }
+
+            if (IsCutAudio && CutTo != null && CutFrom != null)
+            {
+                _conversionOptions.CutMedia(TimeSpan.FromSeconds(double.Parse(CutFrom.ToString())),
+                    TimeSpan.FromSeconds(double.Parse(CutTo.ToString())));
             }
 
             foreach (var item in FilePathInputFiles)
@@ -278,6 +277,22 @@ namespace AudioConverter.MVVM
             }
 
             MessageBox.Show("Done");
+            ResetForm();
+        }
+
+        /// <summary>
+        /// Resets form after running conversion
+        /// </summary>
+        private void ResetForm()
+        {
+            CutTo = null;
+            CutFrom = null;
+            IsCutAudio = false;
+            AudioBitRate = null;
+            IsChangeBitRate = false;
+            FileNames = null;
+            FilePathInputFiles = null;
+            FilePathForOutputFile = null;
         }
     }
 }

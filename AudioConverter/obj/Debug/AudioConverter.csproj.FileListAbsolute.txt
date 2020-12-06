@@ -48,3 +48,4 @@ D:\Repositories\AudioConverter\AudioConverter\obj\Debug\AudioConverter.csproj.Co
 D:\Repositories\AudioConverter\AudioConverter\obj\Debug\AudioConverter.csproj.CopyComplete
 D:\Repositories\AudioConverter\AudioConverter\obj\Debug\AudioConverter.exe
 D:\Repositories\AudioConverter\AudioConverter\obj\Debug\AudioConverter.pdb
+D:\Repositories\AudioConverter\AudioConverter\obj\Debug\AudioConverter.csprojAssemblyReference.cache
